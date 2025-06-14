@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guia Interativo do Lean Canvas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Neo-Brutalism - Stark Black, White, and Bold Accents from previous palette (Red, Green, Blue, Purple, Yellow, Orange, Teal, Pink) -->
+    <!-- Application Structure Plan: A tab-based SPA for non-linear exploration. The structure is designed to let users either follow a logical learning path or jump directly to a specific area of interest, enhancing usability. The sections are: 1) 'Fundamentos' for core principles, 2) 'O Canvas' for an interactive block-by-block deep dive, 3) 'Lean vs BMC' for direct comparison, 4) 'Armadilhas' for common errors, and 5) 'Exemplos' for case studies. This structure organizes the dense report into digestible, task-oriented modules, which is more effective for learning than a single long-scroll page. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Core principles (Build-Measure-Learn). Goal: Organize. Viz/Method: HTML/CSS diagram with icons for a clear process flow. Interaction: Static visualization for clarity. Justification: A simple visual diagram is the most effective way to represent this core cycle. Method: HTML/CSS with Tailwind.
+        - Report Info: The 9 blocks of the Lean Canvas. Goal: Organize & Inform. Viz/Method: Interactive CSS grid representing the canvas. Interaction: Users click on any block to reveal a modal with detailed information (purpose, key questions). Justification: This promotes active exploration and prevents overwhelming the user with information, allowing them to focus on one block at a time. Method: HTML/CSS Grid, JS for modals.
+        - Report Info: Common errors. Goal: Compare. Viz/Method: Horizontal Bar Chart. Interaction: Hovering over bars shows tooltips with data. Justification: A horizontal bar chart is excellent for comparing the frequency of different categories (errors) and is more readable than a pie/doughnut chart for this many categories. Library: Chart.js (Canvas).
+        - Report Info: Case studies (Uber, Airbnb, Spotify). Goal: Organize. Viz/Method: Tabbed content within the 'Exemplos' section. Interaction: Users click tabs to switch between examples. Justification: Tabs are an efficient way to present parallel sets of information without cluttering the UI. Method: HTML/JS.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F7F3;
+            color: #000000;
+        }
+        .header-section, .nav-section, .content-card, .modal-content, .canvas-block, .table-container, .chart-container-wrapper {
+            border: 3px solid #000000;
+            box-shadow: 6px 6px 0px #000000;
+            background-color: #FFFFFF;
+        }
+        .tab-btn {
+            border: 3px solid #000000;
+            box-shadow: 4px 4px 0px #000000;
+            background-color: #F0F0F0;
+            color: #000000;
+            margin: 0 8px 8px 0; /* Slightly asymmetrical margin */
+            padding: 12px 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+        .tab-btn.active {
+            background-color: #5D5FEF;
+            color: #FFFFFF;
+            box-shadow: 4px 4px 0px #000000;
+        }
+        .tab-btn:hover:not(.active) {
+            background-color: #E0E0E0;
+            box-shadow: 2px 2px 0px #000000;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.7);
+        }
+        .modal-content {
+            margin: 10vh auto;
+            border: 4px solid #000000;
+            box-shadow: 8px 8px 0px #000000;
+            background-color: #FFFFFF;
+            padding: 32px;
+            max-width: 90%;
+            width: 700px;
+            position: relative;
+        }
+        .close-modal-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 36px;
+            font-weight: bold;
+            color: #000000;
+            cursor: pointer;
+            line-height: 1;
+            border: 2px solid #000000;
+            background-color: #FF6B6B;
+            padding: 0 10px;
+            box-shadow: 3px 3px 0px #000000;
+        }
+        .close-modal-btn:hover {
+            background-color: #FFD166;
+        }
+        .canvas-block {
+            border: 3px solid #000000;
+            box-shadow: 4px 4px 0px #000000;
+            background-color: #FFFFFF;
+            padding: 16px;
+            cursor: pointer;
+        }
+        .canvas-block:hover {
+            background-color: #F0F0F0;
+            box-shadow: 2px 2px 0px #000000;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 300px; /* Base height */
+            max-height: 400px; /* Max height */
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .table-container table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .table-container th, .table-container td {
+            border: 2px solid #000000;
+            padding: 12px;
+        }
+        .table-container thead {
+            background-color: #E0E0E0;
+        }
+        .table-container tbody tr:nth-child(even) {
+            background-color: #F5F5F5;
+        }
+        .ex-tab-btn {
+            border: 2px solid #000000;
+            box-shadow: 2px 2px 0px #000000;
+            background-color: #F0F0F0;
+            color: #000000;
+            padding: 8px 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+        .ex-tab-btn.active {
+            background-color: #06D6A0;
+            color: #000000;
+            box-shadow: 2px 2px 0px #000000;
+        }
+        .ex-tab-btn:hover:not(.active) {
+            background-color: #E0E0E0;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto px-4 py-8">
+
+        <header class="text-center mb-12 header-section p-8">
+            <h1 class="text-4xl md:text-5xl font-black text-[#000000] mb-2">Guia Interativo do Lean Canvas</h1>
+            <p class="text-lg text-[#000000]">Uma ferramenta para transformar ideias em negócios de sucesso, baseada em "Running Lean".</p>
+        </header>
+
+        <nav class="flex flex-wrap justify-center border-b-0 border-gray-200 mb-8 nav-section p-4">
+            <button class="tab-btn active" data-tab="fundamentos">Fundamentos</button>
+            <button class="tab-btn" data-tab="canvas">O Canvas</button>
+            <button class="tab-btn" data-tab="comparativo">Lean vs BMC</button>
+            <button class="tab-btn" data-tab="armadilhas">Armadilhas Comuns</button>
+            <button class="tab-btn" data-tab="exemplos">Exemplos</button>
+        </nav>
+
+        <main id="tab-content">
+            
+            <div id="fundamentos" class="tab-pane active">
+                 <section class="text-center p-8 content-card">
+                    <h2 class="text-3xl font-bold text-[#000000] mb-4">A Mentalidade Lean</h2>
+                    <p class="max-w-3xl mx-auto text-lg mb-12">"Running Lean" não é sobre criar um plano de negócios rígido, mas sim sobre navegar na incerteza. O objetivo é maximizar o aprendizado sobre os clientes com o mínimo de recursos, utilizando o ciclo Construir-Medir-Aprender como motor de progresso.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center max-w-4xl mx-auto text-center">
+                        <div class="p-6 rounded-lg shadow-md bg-white border-3 border-black box-shadow-4-4-0-black">
+                            <div class="text-4xl mb-2">💡</div>
+                            <h3 class="text-xl font-bold text-[#5D5FEF]">CONSTRUIR</h3>
+                            <p class="text-sm">Transformar uma ideia em um Produto Mínimo Viável (MVP).</p>
+                        </div>
+                        <div class="text-2xl font-black text-[#000000]">➡️</div>
+                        <div class="p-6 rounded-lg shadow-md bg-white border-3 border-black box-shadow-4-4-0-black">
+                             <div class="text-4xl mb-2">📊</div>
+                            <h3 class="text-xl font-bold text-[#5D5FEF]">MEDIR</h3>
+                            <p class="text-sm">Coletar dados reais sobre a reação dos clientes.</p>
+                        </div>
+                        <div class="text-2xl font-black text-[#000000]">➡️</div>
+                        <div class="p-6 rounded-lg shadow-md bg-white border-3 border-black box-shadow-4-4-0-black">
+                             <div class="text-4xl mb-2">🧠</div>
+                            <h3 class="text-xl font-bold text-[#5D5FEF]">APRENDER</h3>
+                            <p class="text-sm">Decidir se deve pivotar ou perseverar com base nos dados.</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-16 p-8 rounded-lg shadow-lg border-3 border-black box-shadow-6-6-0-black max-w-5xl mx-auto content-card">
+                        <h3 class="text-2xl font-bold text-center mb-6">Marcos Cruciais na Jornada da Startup</h3>
+                        <div class="flex flex-col md:flex-row justify-around gap-8">
+                            <div class="text-center">
+                                <h4 class="text-xl font-bold text-[#000000] mb-2">Fit Problema/Solução</h4>
+                                <p class="max-w-sm">A primeira etapa crítica: validar se você encontrou um problema que vale a pena resolver. Os clientes se importam com seus problemas, não com sua solução.</p>
+                            </div>
+                             <div class="text-center">
+                                <h4 class="text-xl font-bold text-[#000000] mb-2">Fit Produto/Mercado</h4>
+                                <p class="max-w-sm">Depois de validar o problema, o foco é construir algo que as pessoas realmente querem e usarão, encontrando um modelo de negócio sustentável.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div id="canvas" class="tab-pane hidden">
+                <section class="text-center p-8 content-card">
+                    <h2 class="text-3xl font-bold text-[#000000] mb-4">O Lean Canvas Interativo</h2>
+                    <p class="max-w-3xl mx-auto text-lg mb-12">Clique em qualquer um dos 9 blocos para explorar sua finalidade, perguntas-chave e dicas para preenchimento. O canvas é um documento vivo, projetado para ser iterado à medida que você aprende.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-7xl mx-auto text-left">
+                        <div class="lg:col-span-2 space-y-4">
+                             <div id="problema" class="canvas-block border-l-4 border-red-400">
+                                <h3 class="font-bold">1. Problema</h3>
+                                <p class="text-xs text-gray-600">Liste os 1-3 principais problemas do seu cliente.</p>
+                            </div>
+                             <div id="solucao" class="canvas-block border-l-4 border-green-400">
+                                <h3 class="font-bold">4. Solução</h3>
+                                <p class="text-xs text-gray-600">Qual a sua solução para esses problemas? (MVP)</p>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-1 space-y-4">
+                            <div id="proposta-valor" class="canvas-block h-full flex flex-col justify-center text-center border-t-4 border-blue-500">
+                                <h3 class="font-bold">3. Proposta de Valor Única</h3>
+                                <p class="text-xs text-gray-600">Sua mensagem clara e convincente.</p>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-2 space-y-4">
+                             <div id="vantagem-injusta" class="canvas-block border-l-4 border-purple-400">
+                                <h3 class="font-bold">9. Vantagem Injusta</h3>
+                                <p class="text-xs text-gray-600">Algo que não pode ser facilmente copiado.</p>
+                            </div>
+                            <div id="metricas-chave" class="canvas-block border-l-4 border-yellow-400">
+                                <h3 class="font-bold">8. Métricas Chave</h3>
+                                <p class="text-xs text-gray-600">Como você mede o sucesso?</p>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-5 grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <div id="estrutura-custos" class="canvas-block text-center border-b-4 border-orange-400">
+                                <h3 class="font-bold">7. Estrutura de Custos</h3>
+                            </div>
+                             <div id="fontes-receita" class="canvas-block text-center border-b-4 border-teal-400">
+                                <h3 class="font-bold">6. Fontes de Receita</h3>
+                            </div>
+                        </div>
+                         <div class="lg:col-start-2 lg:col-span-3 mt-[-1rem] mb-[-1rem] z-10 space-y-4">
+                             <div id="canais" class="canvas-block border-l-4 border-pink-400">
+                                <h3 class="font-bold">5. Canais</h3>
+                                <p class="text-xs text-gray-600">Seu caminho até os clientes.</p>
+                            </div>
+                         </div>
+                          <div class="lg:col-start-1 lg:col-span-2 lg:row-start-1 space-y-4 order-first lg:order-none">
+                            <div id="segmentos-clientes" class="canvas-block h-full flex flex-col justify-center border-l-4 border-red-400">
+                                <h3 class="font-bold">2. Segmentos de Clientes</h3>
+                                 <p class="text-xs text-gray-600">Quem são seus clientes-alvo e early adopters?</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            
+            <div id="comparativo" class="tab-pane hidden">
+                <section class="p-8 content-card">
+                    <h2 class="text-3xl font-bold text-[#000000] mb-4 text-center">Lean Canvas vs. Business Model Canvas</h2>
+                    <p class="max-w-3xl mx-auto text-lg mb-12 text-center">O Lean Canvas é uma adaptação do Business Model Canvas (BMC), otimizada para startups. A principal diferença é a mudança de um foco na empresa para um foco no cliente e no problema.</p>
+                    <div class="rounded-lg shadow-lg overflow-hidden max-w-4xl mx-auto table-container">
+                        <div class="overflow-x-auto">
+                             <table class="w-full text-left">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="p-4 font-bold text-[#000000]">Foco do BMC (Empresa)</th>
+                                        <th class="p-4 font-bold text-[#5D5FEF]">Foco do Lean Canvas (Cliente)</th>
+                                        <th class="p-4 font-bold text-[#000000]">Por que a Mudança é Importante</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="p-4">Parceiros Chave</td>
+                                        <td class="p-4 font-bold">Problema</td>
+                                        <td class="p-4">Valida a necessidade antes de construir a solução.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-4">Atividades Chave</td>
+                                        <td class="p-4 font-bold">Solução</td>
+                                        <td class="p-4">Mantém o foco no MVP, a forma mais simples de resolver o problema.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-4">Recursos Chave</td>
+                                        <td class="p-4 font-bold">Métricas Chave</td>
+                                        <td class="p-4">Mede o progresso real do negócio, não apenas a produção.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-4">Relacionamento com Clientes</td>
+                                        <td class="p-4 font-bold">Vantagem Injusta</td>
+                                        <td class="p-4">Força o pensamento sobre a sustentabilidade e defesa a longo prazo.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div id="armadilhas" class="tab-pane hidden">
+                 <section class="p-8 content-card">
+                    <h2 class="text-3xl font-bold text-[#000000] mb-4 text-center">Armadilhas Comuns para Alunos</h2>
+                    <p class="max-w-3xl mx-auto text-lg mb-12 text-center">Muitos empreendedores iniciantes caem em armadilhas previsíveis. Conhecê-las é o primeiro passo para evitá-las e construir hipóteses mais fortes e testáveis.</p>
+                    <div class="p-6 rounded-lg shadow-lg max-w-5xl mx-auto chart-container-wrapper">
+                        <div class="chart-container">
+                            <canvas id="armadilhasChart"></canvas>
+                        </div>
+                         <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <p><strong class="text-red-500">❌ Ser Vago:</strong> Hipóteses como "usuários felizes" não podem ser testadas. Seja específico.</p>
+                            <p><strong class="text-red-500">❌ Não Validar:</strong> A maior causa de falha. Saia do prédio e converse com clientes.</p>
+                            <p><strong class="text-red-500">❌ Ignorar Concorrência:</strong> Seus clientes já usam alternativas. Estude-as.</p>
+                            <p><strong class="text-red-500">❌ Confundir Funcionalidades com Benefícios:</strong> Clientes compram resultados, não funcionalidades.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div id="exemplos" class="tab-pane hidden">
+                 <section class="p-8 content-card">
+                    <h2 class="text-3xl font-bold text-[#000000] mb-4 text-center">Canvas em Ação: Gigantes do Mercado</h2>
+                    <p class="max-w-3xl mx-auto text-lg mb-12 text-center">Uber, Airbnb e Spotify não começaram com soluções complexas. Eles focaram em um problema real e doloroso para um público específico. Veja como seus modelos poderiam ser esboçados.</p>
+                    
+                    <div class="max-w-4xl mx-auto rounded-lg shadow-lg p-6 content-card">
+                        <div class="flex flex-wrap border-b-0">
+                            <button class="ex-tab-btn active" data-ex-tab="uber">Uber</button>
+                            <button class="ex-tab-btn" data-ex-tab="airbnb">Airbnb</button>
+                            <button class="ex-tab-btn" data-ex-tab="spotify">Spotify</button>
+                        </div>
+                        <div id="example-content" class="pt-6">
+                            <!-- Content will be injected by JS -->
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <div id="canvas-modal" class="modal">
+        <div class="modal-content">
+            <button id="close-modal" class="close-modal-btn">&times;</button>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tabs = document.querySelectorAll('.tab-btn');
+            const panes = document.querySelectorAll('.tab-pane');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function () {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    panes.forEach(p => p.classList.add('hidden'));
+
+                    this.classList.add('active');
+                    document.getElementById(this.dataset.tab).classList.remove('hidden');
+                });
+            });
+
+            // Function to render basic Markdown to HTML
+            function renderBasicMarkdown(text) {
+                let formattedText = text;
+
+                // Handle bold text: **text** -> <strong>text</strong>
+                formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+                const lines = formattedText.split('\n');
+                let htmlOutput = [];
+                let currentListType = null; // 'ul' or 'ol'
+
+                lines.forEach(line => {
+                    const trimmedLine = line.trim();
+
+                    // Check for unordered list item
+                    if (trimmedLine.startsWith('* ') || trimmedLine.startsWith('- ')) {
+                        if (currentListType !== 'ul') {
+                            if (currentListType) htmlOutput.push(`</${currentListType}>`); // Close previous list
+                            htmlOutput.push('<ul>');
+                            currentListType = 'ul';
+                        }
+                        htmlOutput.push(`<li>${trimmedLine.substring(2).trim()}</li>`);
+                    }
+                    // Check for ordered list item
+                    else if (trimmedLine.match(/^\d+\.\s/)) {
+                        if (currentListType !== 'ol') {
+                            if (currentListType) htmlOutput.push(`</${currentListType}>`); // Close previous list
+                            htmlOutput.push('<ol>');
+                            currentListType = 'ol';
+                        }
+                        htmlOutput.push(`<li>${trimmedLine.substring(trimmedLine.indexOf('.') + 1).trim()}</li>`);
+                    }
+                    // Not a list item
+                    else {
+                        if (currentListType) {
+                            htmlOutput.push(`</${currentListType}>`); // Close current list
+                            currentListType = null;
+                        }
+                        if (line.length > 0) { // Add non-empty lines as paragraphs or just text
+                            htmlOutput.push(`<p>${line.trim()}</p>`);
+                        }
+                    }
+                });
+
+                // Close any open list at the end
+                if (currentListType) {
+                    htmlOutput.push(`</${currentListType}>`);
+                }
+
+                return htmlOutput.join('');
+            }
+
+
+            const canvasData = {
+                'problema': {
+                    title: '1. Problema',
+                    content: `
+                        <h3 class="text-2xl font-bold text-[#000000] mb-4">Problema</h3>
+                        <p class="mb-4">Este é o ponto de partida. Descreva os 1 a 3 principais problemas que sua solução aborda para os clientes. É crucial entender a dor do cliente antes de propor uma solução.</p>
+                        <h4 class="font-bold mb-2">Perguntas-Chave:</h4>
+                        <ul class="list-disc list-inside mb-4">
+                            <li>Qual é a dor principal do seu cliente?</li>
+                            <li>Como eles resolvem essa dor hoje (alternativas existentes)?</li>
+                            <li>Por que as alternativas atuais são inadequadas?</li>
+                        </ul>
+                        <p class="text-sm p-3 bg-blue-50 rounded-md border-2 border-black box-shadow-2-2-0-black"><strong>Dica:</strong> Saia do prédio! Converse com clientes em potencial para validar que este é um problema que eles realmente têm e querem resolver.</p>
+                    `
+                },
+                'segmentos-clientes': {
+                    title: '2. Segmentos de Clientes',
+                    content: `
+                        <h3 class="text-2xl font-bold text-[#000000] mb-4">Segmentos de Clientes</h3>
+                        <p class="mb-4">Defina quem são seus clientes ou usuários-alvo. Ser específico aqui é vital. Pense em quem sentirá a dor do "Problema" com mais intensidade.</p>
+                        <h4 class="font-bold mb-2">Perguntas-Chave:</h4>
+                        <ul class="list-disc list-inside mb-4">
+                            <li>Para quem você está criando valor?</li>
+                            <li>Quem são seus "early adopters" - os primeiros e mais entusiastas clientes?</li>
+                            <li>Você consegue criar uma persona para seu cliente ideal?</li>
+                        </ul>
+                        <p class="text-sm p-3 bg-blue-50 rounded-md border-2 border-black box-shadow-2-2-0-black"><strong>Dica:</strong> Diferencie clientes (quem paga) de usuários (quem usa). Às vezes, eles não são a mesma pessoa.</p>
+                    `
+                },
+                'proposta-valor': {
+                    title: '3. Proposta de Valor Única (UVP)',
+                    content: `
+                        <h3 class="text-2xl font-bold text-[#000000] mb-4">Proposta de Valor Única</h3>
+                        <p class="mb-4">Articule por que sua solução é diferente e vale a pena comprar. Deve ser uma mensagem clara, concisa e convincente que se conecta diretamente ao problema número um do cliente.</p>
+                        <h4 class="font-bold mb-2">Perguntas-Chave:</h4>
+                        <ul class="list-disc list-inside mb-4">
+                            <li>Qual é o benefício principal que você oferece?</li>
+                            <li>Como você é diferente e por que o cliente deve escolher você?</li>
+                            <li>Consegue resumir em uma frase: "Ajudamos [X] a fazer [Y] fazendo [Z]"?</li>
+                        </ul>
+                        <p class="text-sm p-3 bg-blue-50 rounded-md border-2 border-black box-shadow-2-2-0-black"><strong>Dica:</strong> Foque nos benefícios e resultados para o cliente, não nas funcionalidades do seu produto.</p>
+                    `
+                },
+                'solucao': {
+                    title: '4. Solução',
+                    content: `
+                        <h3 class="text-2xl font-bold text-[#000000] mb-4">Solução</h3>
+                        <p class="mb-4">Depois de definir o problema, esboce uma solução. Mantenha-a simples e focada nas funcionalidades essenciais que comporão seu Produto Mínimo Viável (MVP).</p>
+                        <h4 class="font-bold mb-2">Perguntas-Chave:</h4>
+                        <ul class="list-disc list-inside mb-4">
+                            <li>Quais são as 3 principais funcionalidades que resolvem os problemas listados?</li>
+                            <li>Como seria a versão mais simples do seu produto?</li>
+                        </ul>
+                        <p class="text-sm p-3 bg-blue-50 rounded-md border-2 border-black box-shadow-2-2-0-black"><strong>Dica:</strong> Não se apaixone pela sua primeira solução. Este bloco deve ser preenchido por último, após uma profunda compreensão do problema.</p>
+                    `
+                },
+                 'canais': {
+                    title: '5. Canais',
+                    content: `
+                        <h3 class="text-2xl font-bold text-[#000000] mb-4">Canais</h3>
+                        <p class="mb-4">Liste os caminhos (gratuitos e pagos) que você usará para alcançar seus segmentos de clientes. Pense em todo o ciclo de vida do cliente, da conscientização à compra e ao suporte.</p>
+                        <h4 class="font-bold mb-2">Perguntas-Chave:</h4>
+                        <ul class="list-disc list-inside mb-4">
+                            <li>Onde seus clientes-alvo passam o tempo?</li>
+                            <li>Como você vai construir um caminho até eles (inbound vs. outbound)?</li>
+                            <li>Quais canais são mais escaláveis e eficientes em termos de custo?</li>
+                        </ul>
+                         <p class="text-sm p-3 bg-blue-50 rounded-md border-2 border-black box-shadow-2-2-0-black"><strong>Dica:</strong> No início, foque em um ou dois canais que permitam aprendizado rápido, mesmo que não sejam escaláveis.</p>
+                    `
+                },
+                'fontes-receita': {
+                    title: '6. Fontes de Receita',
+                    content: `
+                        <h3 class="text-2xl font-bold text-[#000000] mb-4">Fontes de Receita</h3>
+                        <p class="mb-4">Identifique como seu negócio gerará dinheiro. Isso inclui o modelo de precificação (assinatura, transacional, etc.) e o valor que os clientes estão dispostos a pagar.</p>
+                        <h4 class="font-bold mb-2">Perguntas-Chave:</h4>
+                        <ul class="list-disc list-inside mb-4">
+                            <li>Pelo que os clientes estão realmente dispostos a pagar?</li>
+                            <li>Qual é o seu modelo de precificação?</li>
+                             <li>Como a sua precificação se compara com as alternativas existentes?</li>
+                        </ul>
+                        <p class="text-sm p-3 bg-blue-50 rounded-md border-2 border-black box-shadow-2-2-0-black"><strong>Dica:</strong> O preço é parte do produto. Comece a cobrar desde o primeiro dia para validar a disposição do cliente a pagar.</p>
+                    `
+                },
+                'estrutura-custos': {
+                    title: '7. Estrutura de Custos',
+                    content: `
+                        <h3 class="text-2xl font-bold text-[#000000] mb-4">Estrutura de Custos</h3>
+                        <p class="mb-4">Liste todos os custos fixos e variáveis associados à operação do seu negócio. Pense nos custos para construir, comercializar e entregar seu produto.</p>
+                        <h4 class="font-bold mb-2">Perguntas-Chave:</h4>
+                        <ul class="list-disc list-inside mb-4">
+                            <li>Quais são os custos mais importantes para operar seu modelo?</li>
+                            <li>Quais são seus custos de aquisição de clientes (CAC)?</li>
+                            <li>Quais são seus custos de infraestrutura (servidores, salários)?</li>
+                        </ul>
+                         <p class="text-sm p-3 bg-blue-50 rounded-md border-2 border-black box-shadow-2-2-0-black"><strong>Dica:</strong> Calcule o seu ponto de equilíbrio (break-even) para entender quando o negócio se tornará lucrativo.</p>
+                    `
+                },
+                'metricas-chave': {
+                    title: '8. Métricas Chave',
+                    content: `
+                        <h3 class="text-2xl font-bold text-[#000000] mb-4">Métricas Chave</h3>
+                        <p class="mb-4">Defina os números que indicarão o desempenho real do seu negócio. O objetivo é focar em métricas acionáveis que o ajudem a tomar decisões.</p>
+                        <h4 class="font-bold mb-2">Perguntas-Chave:</h4>
+                        <ul class="list-disc list-inside mb-4">
+                            <li>Qual atividade chave impulsiona o valor para o cliente?</li>
+                            <li>Como você mede o engajamento e a retenção de usuários?</li>
+                        </ul>
+                        <p class="text-sm p-3 bg-blue-50 rounded-md border-2 border-black box-shadow-2-2-0-black"><strong>Dica:</strong> Evite "métricas de vaidade" (ex: total de downloads) e foque em métricas que reflitam a saúde do negócio (ex: usuários ativos, taxa de retenção).</p>
+                    `
+                },
+                'vantagem-injusta': {
+                    title: '9. Vantagem Injusta',
+                    content: `
+                        <h3 class="text-2xl font-bold text-[#000000] mb-4">Vantagem Injusta</h3>
+                        <p class="mb-4">Descreva algo que sua empresa possui e que não pode ser facilmente copiado ou comprado pelos concorrentes. Esta é a sua defesa a longo prazo.</p>
+                        <h4 class="font-bold mb-2">Perguntas-Chave:</h4>
+                        <ul class="list-disc list-inside mb-4">
+                            <li>O que torna seu negócio único e difícil de imitar?</li>
+                            <li>Isso pode ser uma comunidade, dados exclusivos, uma marca forte, efeito de rede, etc.</li>
+                        </ul>
+                         <p class="text-sm p-3 bg-blue-50 rounded-md border-2 border-black box-shadow-2-2-0-black"><strong>Dica:</strong> Muitas startups não têm isso no início. "Ter um ótimo produto" não é uma vantagem injusta. Este é um bloco para se aspirar e construir ao longo do tempo.</p>
+                    `
+                }
+            };
+
+            const modal = document.getElementById('canvas-modal');
+            const modalBody = document.getElementById('modal-body');
+            const closeModal = document.getElementById('close-modal');
+            
+            document.querySelectorAll('.canvas-block').forEach(block => {
+                block.addEventListener('click', function () {
+                    const blockId = this.id;
+                    if (canvasData[blockId]) {
+                        modalBody.innerHTML = canvasData[blockId].content;
+                        modal.style.display = 'flex';
+                    }
+                });
+            });
+
+            closeModal.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            });
+
+            const armadilhasCtx = document.getElementById('armadilhasChart').getContext('2d');
+            new Chart(armadilhasCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Ser Vago/Genérico', 'Não Validar Suposições', 'Ignorar Concorrência', 'Confundir Features com Benefícios', 'Tratar como Estático'],
+                    datasets: [{
+                        label: 'Frequência do Erro',
+                        data: [85, 95, 70, 75, 60],
+                        backgroundColor: '#A0A2F5',
+                        borderColor: '#000000',
+                        borderWidth: 2,
+                        borderRadius: 0
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: { display: false },
+                            ticks: {
+                                callback: function(value) { return value + '%' }
+                            }
+                        },
+                        y: {
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.raw}% dos alunos cometem este erro.`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            const exampleData = {
+                uber: `
+                    <h4 class="font-bold text-lg mb-4">Uber: Transporte sob Demanda</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><strong>Problema:</strong> Dificuldade em encontrar táxis confiáveis e de forma rápida.</li>
+                        <li><strong>Clientes:</strong> Moradores urbanos e viajantes de negócios.</li>
+                        <li><strong>Proposta de Valor:</strong> "Seu motorista particular em um toque".</li>
+                        <li><strong>Solução:</strong> App que conecta passageiros a motoristas próximos.</li>
+                        <li><strong>Vantagem Injusta:</strong> Efeito de rede massivo.</li>
+                    </ul>
+                `,
+                airbnb: `
+                    <h4 class="font-bold text-lg mb-4">Airbnb: Hospedagem Única</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><strong>Problema:</strong> Hotéis são caros, impessoais e muitas vezes lotados.</li>
+                        <li><strong>Clientes:</strong> Viajantes com orçamento limitado e que buscam experiências autênticas.</li>
+                        <li><strong>Proposta de Valor:</strong> "Pertença a qualquer lugar".</li>
+                        <li><strong>Solução:</strong> Plataforma para alugar espaços únicos de moradores locais.</li>
+                        <li><strong>Vantagem Injusta:</strong> Confiança da comunidade e efeito de rede.</li>
+                    </ul>
+                `,
+                spotify: `
+                    <h4 class="font-bold text-lg mb-4">Spotify: Música para Todos</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><strong>Problema:</strong> Pirataria de música é inconveniente e o acesso legal é caro.</li>
+                        <li><strong>Clientes:</strong> Amantes da música frustrados com downloads ilegais.</li>
+                        <li><strong>Proposta de Valor:</strong> "Música para todos os momentos".</li>
+                        <li><strong>Solução:</strong> Serviço de streaming com um vasto catálogo em modelo freemium.</li>
+                        <li><strong>Vantagem Injusta:</strong> Acordos com gravadoras e algoritmos de recomendação.</li>
+                    </ul>
+                `
+            };
+            
+            const exTabs = document.querySelectorAll('.ex-tab-btn');
+            const exContent = document.getElementById('example-content');
+
+            function updateExampleContent(tabName) {
+                 exContent.innerHTML = exampleData[tabName];
+            }
+
+            exTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    exTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    updateExampleContent(this.dataset.exTab);
+                });
+            });
+            
+            updateExampleContent('uber');
+        });
+    </script>
+</body>
+</html>
